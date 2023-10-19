@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+# usage: python heartbleed.py 10.10.10.79:443 > result 
 # Modified by Travis Lee
 # Last Updated: 4/21/14
 # Version 1.16
