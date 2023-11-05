@@ -1,3 +1,5 @@
+# used for Challenge-Web-Diogenes' Rage
+
 import requests;
 from threading import Thread;
 
