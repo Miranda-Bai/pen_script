@@ -14,8 +14,8 @@ def session_concurrency():
         "coupon_code":"HTB_100"
     }
 
-    returndata = requests.post(url="httP://142.93.32.153:32625/api/coupons/apply", headers=header, json=data)
-    print(returndata)
+    returndata = requests.post(url="http://142.93.32.153:32625/api/coupons/apply", headers=header, json=data)
+    print(returndata.json())
 
 if __name__ == "__main__":
     for x in range(30):
