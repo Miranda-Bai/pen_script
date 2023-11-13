@@ -1,3 +1,7 @@
+// usage: sudo apt update sudo 
+// apt install mono-complete
+// mcs -out:revshell.exe revshell.cs
+
 using System;
 using System.Text;
 using System.IO;
