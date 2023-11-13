@@ -80,7 +80,7 @@ namespace ConnectBack
         public static void Main(string[] args)
         {
             // Provide the server IP address and port number when creating an instance of the Program class
-            Program program = new Program("10.0.2.15", 443);
+            Program program = new Program("10.10.10.15", 4444);
         }
     }
 }
